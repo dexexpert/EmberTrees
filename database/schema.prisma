@@ -1,0 +1,680 @@
+// Cannabis Delivery Platform Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  emailVerified     DateTime?
+  phone             String?      @unique
+  phoneVerified     DateTime?
+
+  // Personal Information
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime
+  avatar            String?
+
+  // Address Information
+  addresses         Address[]
+  primaryAddressId  String?
+
+  // Account Status
+  role              Role         @default(CUSTOMER)
+  status            UserStatus   @default(ACTIVE)
+  isVerified        Boolean      @default(false)
+  verificationDocs  Json?        // ID documents, medical cards
+
+  // Compliance
+  ageVerifiedAt     DateTime?
+  medicalCard       Json?        // Medical cannabis info
+
+  // Relationships
+  orders            Order[]
+  reviews           Review[]
+  loyaltyAccount    LoyaltyAccount?
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+
+  // Authentication
+  accounts          Account[]
+  sessions          Session[]
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@map("users")
+}
+
+model Address {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type            AddressType @default(HOME)
+  label           String?   // "Home", "Work", etc.
+
+  street          String
+  apartment       String?
+  city            String
+  state           String
+  zipCode         String
+  country         String    @default("US")
+
+  // Delivery specific
+  deliveryNotes   String?
+  isDeliveryZone  Boolean   @default(false)
+  coordinates     Json?     // lat, lng
+
+  orders          Order[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("addresses")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// PRODUCT CATALOG & INVENTORY
+// ============================================================================
+
+model Product {
+  id              String         @id @default(cuid())
+  sku             String         @unique
+  name            String
+  description     String         @db.Text
+
+  // Product Details
+  category        ProductCategory
+  subcategory     String?
+  brand           String
+  strain          String?
+  strainType      StrainType?
+
+  // Cannabis Specific
+  thcContent      Float?         // THC percentage
+  cbdContent      Float?         // CBD percentage
+  terpenes        Json?          // Terpene profile
+
+  // Pricing & Inventory
+  basePrice       Decimal        @db.Decimal(10,2)
+  variants        ProductVariant[]
+
+  // Media & Assets
+  images          String[]       // Image URLs
+  videos          String[]       // Video URLs
+  documents       Json?          // Lab reports, certificates
+
+  // SEO & Marketing
+  slug            String         @unique
+  tags            String[]
+  metaTitle       String?
+  metaDescription String?
+
+  // Status
+  status          ProductStatus  @default(DRAFT)
+  isActive        Boolean        @default(true)
+  isFeatured      Boolean        @default(false)
+
+  // Compliance
+  labResults      Json?          // Lab test results
+  labResultsDate  DateTime?
+  complianceNotes String?
+
+  // Relationships
+  reviews         Review[]
+  orderItems      OrderItem[]
+  inventoryLogs   InventoryLog[]
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Variant Details
+  name          String    // "1g", "3.5g", "7g", "14g", "28g"
+  weight        Float     // Weight in grams
+  unit          String    // "gram", "ounce", "piece"
+
+  // Pricing
+  price         Decimal   @db.Decimal(10,2)
+  salePrice     Decimal?  @db.Decimal(10,2)
+
+  // Inventory
+  stockQuantity Int       @default(0)
+  lowStockAlert Int       @default(5)
+
+  // Status
+  isActive      Boolean   @default(true)
+
+  // Relationships
+  orderItems    OrderItem[]
+  inventoryLogs InventoryLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("product_variants")
+}
+
+// ============================================================================
+// ORDER MANAGEMENT
+// ============================================================================
+
+model Order {
+  id                String         @id @default(cuid())
+  orderNumber       String         @unique
+
+  // Customer Information
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+
+  // Delivery Information
+  deliveryAddressId String
+  deliveryAddress   Address        @relation(fields: [deliveryAddressId], references: [id])
+  deliveryNotes     String?
+
+  // Order Details
+  items             OrderItem[]
+
+  // Pricing
+  subtotal          Decimal        @db.Decimal(10,2)
+  taxAmount         Decimal        @db.Decimal(10,2)
+  deliveryFee       Decimal        @db.Decimal(10,2) @default(0)
+  discountAmount    Decimal        @db.Decimal(10,2) @default(0)
+  totalAmount       Decimal        @db.Decimal(10,2)
+
+  // Status & Tracking
+  status            OrderStatus    @default(PENDING)
+  paymentStatus     PaymentStatus  @default(PENDING)
+
+  // Delivery Tracking
+  deliveryId        String?
+  delivery          Delivery?      @relation(fields: [deliveryId], references: [id])
+
+  // Payment
+  payments          Payment[]
+
+  // Compliance
+  ageVerifiedAt     DateTime?
+  verificationMethod String?       // "ID_SCAN", "MANUAL", etc.
+
+  // Timestamps
+  placedAt          DateTime       @default(now())
+  confirmedAt       DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String         @id @default(cuid())
+  orderId         String
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId       String
+  product         Product        @relation(fields: [productId], references: [id])
+
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+
+  quantity        Int
+  unitPrice       Decimal        @db.Decimal(10,2)
+  totalPrice      Decimal        @db.Decimal(10,2)
+
+  // Compliance tracking
+  batchNumber     String?
+  expirationDate  DateTime?
+
+  createdAt       DateTime       @default(now())
+
+  @@map("order_items")
+}
+
+// ============================================================================
+// DELIVERY MANAGEMENT
+// ============================================================================
+
+model Delivery {
+  id                String           @id @default(cuid())
+
+  // Driver Assignment
+  driverId          String?
+  driver            Driver?          @relation(fields: [driverId], references: [id])
+
+  // Route Information
+  orders            Order[]
+  deliveryRoute     Json?            // Optimized route data
+
+  // Status & Timing
+  status            DeliveryStatus   @default(PENDING)
+  scheduledFor      DateTime
+  startedAt         DateTime?
+  completedAt       DateTime?
+
+  // Location Tracking
+  currentLocation   Json?            // Real-time GPS coordinates
+  trackingHistory   Json[]           // Location history
+
+  // Delivery Details
+  totalDistance     Float?
+  estimatedDuration Int?             // Minutes
+  actualDuration    Int?             // Minutes
+
+  // Compliance
+  deliveryPhotos    String[]         // Delivery confirmation photos
+  signatures        Json[]           // Digital signatures
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@map("deliveries")
+}
+
+model Driver {
+  id                String           @id @default(cuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id])
+
+  // Driver Information
+  licenseNumber     String           @unique
+  licenseExpiry     DateTime
+  vehicleInfo       Json             // Car details, insurance
+
+  // Status
+  status            DriverStatus     @default(INACTIVE)
+  isOnline          Boolean          @default(false)
+  currentLocation   Json?
+
+  // Performance
+  rating            Float?           @default(5.0)
+  totalDeliveries   Int              @default(0)
+  totalEarnings     Decimal          @db.Decimal(10,2) @default(0)
+
+  // Relationships
+  deliveries        Delivery[]
+  earnings          DriverEarning[]
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@map("drivers")
+}
+
+// ============================================================================
+// PAYMENT PROCESSING
+// ============================================================================
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+
+  // Payment Details
+  amount          Decimal       @db.Decimal(10,2)
+  currency        String        @default("USD")
+  method          PaymentMethod
+
+  // Payment Provider
+  providerId      String?       // Stripe payment intent ID
+  providerData    Json?         // Provider-specific data
+
+  // Status
+  status          PaymentStatus @default(PENDING)
+
+  // Timestamps
+  authorizedAt    DateTime?
+  capturedAt      DateTime?
+  refundedAt      DateTime?
+  failedAt        DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// ============================================================================
+// REVIEWS & RATINGS
+// ============================================================================
+
+model Review {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+
+  rating      Int       // 1-5 stars
+  title       String?
+  comment     String?   @db.Text
+  images      String[]  // Review photos
+
+  // Status
+  isVerified  Boolean   @default(false)
+  isPublished Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+// ============================================================================
+// LOYALTY & REWARDS
+// ============================================================================
+
+model LoyaltyAccount {
+  id            String            @id @default(cuid())
+  userId        String            @unique
+  user          User              @relation(fields: [userId], references: [id])
+
+  points        Int               @default(0)
+  tier          LoyaltyTier       @default(BRONZE)
+
+  transactions  LoyaltyTransaction[]
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyTransaction {
+  id              String         @id @default(cuid())
+  accountId       String
+  account         LoyaltyAccount @relation(fields: [accountId], references: [id])
+
+  type            TransactionType
+  points          Int
+  description     String
+  orderId         String?
+
+  createdAt       DateTime       @default(now())
+
+  @@map("loyalty_transactions")
+}
+
+// ============================================================================
+// NOTIFICATIONS & COMMUNICATIONS
+// ============================================================================
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id])
+
+  type        NotificationType
+  title       String
+  message     String             @db.Text
+  data        Json?              // Additional context data
+
+  isRead      Boolean            @default(false)
+  readAt      DateTime?
+
+  createdAt   DateTime           @default(now())
+
+  @@map("notifications")
+}
+
+// ============================================================================
+// INVENTORY & COMPLIANCE
+// ============================================================================
+
+model InventoryLog {
+  id            String         @id @default(cuid())
+  productId     String
+  product       Product        @relation(fields: [productId], references: [id])
+  variantId     String?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+
+  type          InventoryAction
+  quantity      Int
+  previousStock Int
+  newStock      Int
+
+  reason        String?
+  batchNumber   String?
+  notes         String?
+
+  // Staff member who made the change
+  performedBy   String
+
+  createdAt     DateTime       @default(now())
+
+  @@map("inventory_logs")
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+
+  action      String      // "ORDER_PLACED", "PAYMENT_PROCESSED", etc.
+  entity      String      // "order", "product", "user"
+  entityId    String      // ID of the affected entity
+
+  oldData     Json?       // Previous state
+  newData     Json?       // New state
+
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// FINANCIAL TRACKING
+// ============================================================================
+
+model DriverEarning {
+  id          String    @id @default(cuid())
+  driverId    String
+  driver      Driver    @relation(fields: [driverId], references: [id])
+
+  deliveryId  String?   // If tied to specific delivery
+
+  type        EarningType
+  amount      Decimal   @db.Decimal(10,2)
+  description String
+
+  paidAt      DateTime?
+
+  createdAt   DateTime  @default(now())
+
+  @@map("driver_earnings")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Role {
+  CUSTOMER
+  DRIVER
+  ADMIN
+  MANAGER
+  SUPPORT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+enum ProductCategory {
+  FLOWER
+  EDIBLES
+  CONCENTRATES
+  VAPES
+  PREROLLS
+  TOPICALS
+  ACCESSORIES
+  BEVERAGES
+}
+
+enum StrainType {
+  SATIVA
+  INDICA
+  HYBRID
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  DIGITAL_WALLET
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum DriverStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ON_BREAK
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum TransactionType {
+  EARNED
+  REDEEMED
+  EXPIRED
+  BONUS
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  DELIVERY_UPDATE
+  PROMOTION
+  SYSTEM
+  SECURITY
+}
+
+enum InventoryAction {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  DAMAGED
+  EXPIRED
+  RETURNED
+}
+
+enum EarningType {
+  DELIVERY_FEE
+  TIP
+  BONUS
+  ADJUSTMENT
+}

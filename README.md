@@ -1,36 +1,159 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌿 Ember Trees - Cannabis Delivery Platform
 
-## Getting Started
+> **Senior-Level Professional Cannabis Delivery Platform**
+> Built with Next.js 15, TypeScript, Prisma, and comprehensive compliance features
 
-First, run the development server:
+## 🏢 **Platform Overview**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Ember Trees is an enterprise-grade cannabis delivery platform designed for regulatory compliance, scalability, and exceptional user experience. This platform handles the complete cannabis delivery ecosystem from customer ordering to driver delivery with full regulatory compliance.
+
+## 🛠️ **Technology Stack**
+
+### **Core Technologies**
+- **Frontend**: Next.js 15 (App Router) + TypeScript
+- **Backend**: tRPC + Next.js API Routes
+- **Database**: PostgreSQL + Prisma ORM
+- **Authentication**: NextAuth.js + JWT
+- **Styling**: TailwindCSS + Shadcn/UI
+- **State Management**: Zustand + React Query
+
+### **Business-Critical Integrations**
+- **Payments**: Stripe
+- **Maps & Delivery**: Mapbox GL JS
+- **Real-time**: WebSockets (Socket.io)
+- **File Storage**: AWS S3
+- **Caching**: Redis
+- **Queue System**: Bull Queue
+- **Search**: Elasticsearch
+- **Monitoring**: Sentry + DataDog
+
+## 🏗️ **Architecture Highlights**
+
+### **Multi-Role System**
+- **👤 Customers**: Product browsing, ordering, tracking
+- **🚗 Drivers**: Delivery management, route optimization
+- **🏪 Admins**: Inventory, compliance, analytics
+- **👨‍💼 Managers**: Business oversight, reporting
+
+### **Compliance Features**
+- ✅ Age verification & ID scanning
+- ✅ Seed-to-sale tracking
+- ✅ State reporting integration
+- ✅ Lab result management
+- ✅ Audit trails & logs
+- ✅ Tax calculation & compliance
+
+### **Key Business Features**
+- 🛒 Advanced product catalog with lab results
+- 📍 Real-time delivery tracking
+- 💳 Secure payment processing
+- 🎯 Loyalty program & rewards
+- 📊 Advanced analytics & reporting
+- 📱 Mobile-responsive design
+
+## 🚀 **Getting Started**
+
+### **Prerequisites**
+- Node.js 18.17.0 or higher
+- PostgreSQL 14 or higher
+- Redis server
+- npm 9.0.0 or higher
+
+### **Installation**
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/ember-trees.git
+   cd ember-trees
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment setup**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+4. **Database setup**
+   ```bash
+   # Generate Prisma client
+   npm run db:generate
+
+   # Push schema to database
+   npm run db:push
+
+   # Seed initial data
+   npm run db:seed
+   ```
+
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+Visit `http://localhost:3000` to access the application.
+
+## 📁 **Project Structure**
+
+```
+📦 ember-trees/
+├── 📁 app/                          # Next.js App Router
+│   ├── 📁 api/                      # API routes
+│   ├── 📁 auth/                     # Authentication pages
+│   ├── 📁 admin/                    # Admin dashboard
+│   ├── 📁 customer/                 # Customer portal
+│   └── 📁 driver/                   # Driver interface
+├── 📁 src/                          # Source code
+│   ├── 📁 components/               # Reusable components
+│   ├── 📁 lib/                      # Utilities & configurations
+│   ├── 📁 types/                    # TypeScript definitions
+│   └── 📁 constants/                # App constants
+├── 📁 database/                     # Database schema & migrations
+├── 📁 docs/                         # Documentation
+├── 📁 tests/                        # Test suites
+└── 📁 config/                       # Configuration files
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 💻 **Development**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### **Available Scripts**
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run test         # Run test suite
+npm run type-check   # TypeScript checking
+npm run db:migrate   # Run database migrations
+npm run db:studio    # Open Prisma Studio
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### **Code Quality**
+- **TypeScript**: Full type safety
+- **ESLint**: Code linting and formatting
+- **Prettier**: Code formatting
+- **Husky**: Pre-commit hooks
+- **Jest**: Unit testing
+- **Playwright**: E2E testing
 
-## Learn More
+## 🔐 **Security & Compliance**
 
-To learn more about Next.js, take a look at the following resources:
+### **Data Protection**
+- **HIPAA Compliance**: Medical cannabis data protection
+- **PCI Compliance**: Secure payment processing
+- **End-to-end Encryption**: All sensitive data encrypted
+- **Audit Logging**: Complete user action tracking
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### **Cannabis Compliance**
+- **State Integration**: Automatic state reporting
+- **Metrc Integration**: Seed-to-sale tracking
+- **Lab Results**: Product testing verification
+- **Age Verification**: ID scanning & validation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Built with ❤️ for the cannabis industry**

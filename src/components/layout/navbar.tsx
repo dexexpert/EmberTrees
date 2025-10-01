@@ -41,7 +41,7 @@ export default function Navbar() {
               {/* Cart Icon */}
               <Link href="/cart" className="p-2">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.1 5.8A2 2 0 007.9 21h8.2a2 2 0 001.9-2.2L16 13M7 13v-2m6 0V9a3 3 0 016 0v2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.1 5.8A2 2 0 007.9 21h8.2a2 2 0 001.9-2.2L16 13M7 13v-2m6 0V9a3 3 0 616 0v2" />
                 </svg>
               </Link>
 

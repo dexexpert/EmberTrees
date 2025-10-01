@@ -1,0 +1,76 @@
+/* =============================================================================
+   CANNABIS DELIVERY PLATFORM - DESIGN TOKENS
+   ============================================================================= */
+
+:root {
+  /* Cannabis Brand Colors */
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-900: #064e3b;
+
+  /* UI Colors */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --muted: #f6f6f6;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  --input: #ffffff;
+  --ring: var(--emerald-500);
+
+  /* Semantic Colors */
+  --primary: var(--emerald-600);
+  --primary-foreground: #ffffff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Cal Sans', var(--font-sans);
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Age Gate & Compliance */
+.age-gate {
+  background: linear-gradient(135deg, var(--emerald-600) 0%, var(--emerald-700) 100%);
+}
+
+/* Product Categories */
+.category-flower { --category-color: #10b981; }
+.category-edibles { --category-color: #f59e0b; }
+.category-vapes { --category-color: #3b82f6; }
+.category-concentrates { --category-color: #8b5cf6; }
+
+/* Cannabis Compliance Indicators */
+.compliance-verified {
+  background-color: var(--success);
+  color: white;
+}
+
+.lab-tested {
+  border: 2px solid var(--success);
+  background-color: var(--success-bg);
+}

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from 'next/font/google';
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Navbar, Footer } from "@/components";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "EmberTrees - Premium Cannabis Delivery",
@@ -15,9 +16,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: "#1f1f1f"}}>
       <body className={inter.className}>
-        {children}
+        <Navbar />
+        <div className="mt-[-100px]">{children}</div>
+        <Footer />
       </body>
     </html>
   );
